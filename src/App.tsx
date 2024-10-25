@@ -1,11 +1,11 @@
-import React from 'react'
+// src/App.tsx
+import { ThemeProvider } from "./components/theme-provider"
+import ScribeAI from "./screens/scribeAI" // Move your main component to a separate file
 
-function App() {
+export default function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <p>Start prompting (or editing) to see magic happen :)</p>
-    </div>
+    <ThemeProvider>
+      <ScribeAI />
+    </ThemeProvider>
   )
 }
-
-export default App
