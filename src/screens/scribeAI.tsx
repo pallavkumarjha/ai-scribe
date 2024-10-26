@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createWorker } from 'tesseract.js'
+import Lottie from 'lottie-react';
 import { Button } from "../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input"
@@ -20,6 +21,7 @@ import { motion } from 'framer-motion'
 import OpenAI from 'openai'
 import { jsPDF } from 'jspdf'
 import heroImage from '../assets/images/hero.jpeg'
+import animationData from '../assets/animations/header.json'; // Make sure to replace with the correct path
 
 interface ImageData {
   id: string;
@@ -183,13 +185,19 @@ export default function ScribeAI() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col bg-background transition-colors duration-300`}>
-      <nav className="border-b">
+    <div className={`min-h-screen bg-dark-background flex flex-col ${isDark ? 'bg-dark-background text-white bg-gray-800' : 'bg-background text-black'} transition-colors duration-300`}>
+      <nav className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-300'}`}>
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <BookOpen className="h-6 w-6" />
             <span className="text-xl font-bold">Image Notes AI</span>
           </div>
+          <Lottie
+            animationData={animationData} 
+            loop={true} 
+            style={{ width: 40, height: 40 }} 
+            className="rounded-full mx-auto" 
+          />
           <Button
             size="icon"
             onClick={() => setIsDark(!isDark)}
@@ -200,17 +208,18 @@ export default function ScribeAI() {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8 flex-grow">
-        <section className="hero bg-gray-100 py-20 mb-8">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center text-center md:text-left">
+      <main className={`container mx-auto px-4 py-8 flex-grow ${isDark ? 'bg-dark-background' : 'bg-background'}`}>
+        <section className={`hero ${isDark ? 'bg-gray-800' : 'bg-gray-100'} py-20 mb-8`}>
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center text-center md:text-left gap-8">
             <div className="md:w-1/2 space-y-4">
               <h1 className="text-5xl font-bold mb-4">Transform Handwriting to Text ✨</h1>
-              <p className="text-lg text-muted-foreground">
+              <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-muted-foreground'}`}>
                 Our platform allows you to transform your handwritten notes into structured, editable text using advanced AI technology. Upload your images and let us do the rest!
               </p>
               <Button 
                 onClick={() => window.scrollBy({ top: 500, behavior: 'smooth' })}
-                className="mt-4"
+                className={`mt-4 ${!isDark ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}
+                variant="primary"
               >
                 Try it
               </Button>
@@ -226,7 +235,7 @@ export default function ScribeAI() {
         </section>
 
         <div className="grid gap-8 max-w-6xl mx-auto">
-          <Card>
+          <Card className={isDark ? 'bg-gray-800' : 'bg-white'}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5" />
@@ -242,7 +251,7 @@ export default function ScribeAI() {
                     type="file" 
                     accept="image/*"
                     onChange={handleImageUpload}
-                    className="cursor-pointer"
+                    className={`cursor-pointer ${!isDark ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}
                     multiple
                   />
                 </div>
@@ -276,7 +285,7 @@ export default function ScribeAI() {
           </Card>
 
           {images.length > 0 && (
-            <Card>
+            <Card className={isDark ? 'bg-gray-900' : 'bg-white'}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
@@ -310,7 +319,7 @@ export default function ScribeAI() {
                             id={`notes-${image.id}`}
                             value={image.notes}
                             readOnly
-                            className="min-h-[300px] font-mono text-sm p-4"
+                            className={`min-h-[300px] font-mono text-sm p-4 ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}
                             placeholder="Notes will appear here after processing..."
                           />
                         </div>
@@ -324,7 +333,7 @@ export default function ScribeAI() {
         </div>
       </main>
 
-      <footer className="bg-gray-900 text-white mt-12">
+      <footer className={`mt-12 ${isDark ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'}`}>
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
           <p className="text-center text-sm">
             &copy; 2024 AI Code Converter. All rights reserved.
