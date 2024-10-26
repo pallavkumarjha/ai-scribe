@@ -12,10 +12,14 @@ import {
   Moon,
   Upload,
   Sparkles,
-  BookOpen
+  BookOpen,
+  CoffeeIcon,
+  Download
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import OpenAI from 'openai'
+import { jsPDF } from 'jspdf'
+import heroImage from '../assets/images/hero.jpeg'
 
 interface ImageData {
   id: string;
@@ -24,9 +28,9 @@ interface ImageData {
 }
 
 const openai = new OpenAI({
-    apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-    dangerouslyAllowBrowser: true
-  });
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true
+});
 
 const ImagePreview = ({ image, onDelete }: { image: ImageData; onDelete: () => void }) => {
   return (
@@ -64,7 +68,6 @@ export default function ScribeAI() {
   const [, setShowIntro] = useState(true)
 
   useEffect(() => {
-    // Check system preference
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setIsDark(true)
     }
@@ -105,15 +108,20 @@ export default function ScribeAI() {
             role: "system",
             content: `You are an expert in text analysis. Please convert the following handwritten text into a structured and concise format, highlighting key points and organizing the information logically:\n\n"${text}"\n\nProvide the structured notes below:`,
           },
-        ],
-        max_tokens: 150,
-        temperature: 0.7,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
+        ]
       })
-      if (response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
-        return response.choices[0].message.content.trim()
+
+      const messageContent = response.choices[0]?.message?.content?.trim()
+
+      if (messageContent) {
+        // Format the response content
+        const formattedContent = messageContent
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .join('\n')
+
+        return formattedContent
       } else {
         console.error('OpenAI API Error: Response is invalid or missing content')
         return 'Error generating notes. Please try again.'
@@ -144,20 +152,43 @@ export default function ScribeAI() {
 
     await worker.terminate()
 
-    console.log('updatedImages', updatedImages)
-
     setImages(updatedImages)
     setIsProcessing(false)
   }
 
+  const handleExportPDF = () => {
+    const pdf = new jsPDF()
+    let yOffset = 20
+
+    images.forEach((image, index) => {
+      if (index > 0) {
+        pdf.addPage()
+        yOffset = 20
+      }
+
+      // Add image
+      pdf.addImage(image.src, 'JPEG', 20, yOffset, 80, 80)
+      yOffset += 90
+
+      // Add notes
+      pdf.setFontSize(14)
+      pdf.text('Generated Notes:', 20, yOffset)
+      yOffset += 10
+      pdf.setFontSize(12)
+      const splitNotes = pdf.splitTextToSize(image.notes, 170)
+      pdf.text(splitNotes, 20, yOffset)
+    })
+
+    pdf.save('image_notes_ai.pdf')
+  }
 
   return (
-    <div className={`min-h-screen bg-background transition-colors duration-300`}>
+    <div className={`min-h-screen flex flex-col bg-background transition-colors duration-300`}>
       <nav className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <BookOpen className="h-6 w-6" />
-            <span className="text-xl font-bold">ScribeAI</span>
+            <span className="text-xl font-bold">Image Notes AI</span>
           </div>
           <Button
             size="icon"
@@ -169,17 +200,30 @@ export default function ScribeAI() {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-3xl mx-auto text-center mb-12"
-        >
-          <h1 className="text-4xl font-bold mb-4">Transform Handwriting to Text ✨</h1>
-          <p className="text-muted-foreground">
-            Upload your handwritten notes and let AI convert them into editable text
-          </p>
-        </motion.div>
+      <main className="container mx-auto px-4 py-8 flex-grow">
+        <section className="hero bg-gray-100 py-20 mb-8">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center text-center md:text-left">
+            <div className="md:w-1/2 space-y-4">
+              <h1 className="text-5xl font-bold mb-4">Transform Handwriting to Text ✨</h1>
+              <p className="text-lg text-muted-foreground">
+                Our platform allows you to transform your handwritten notes into structured, editable text using advanced AI technology. Upload your images and let us do the rest!
+              </p>
+              <Button 
+                onClick={() => window.scrollBy({ top: 500, behavior: 'smooth' })}
+                className="mt-4"
+              >
+                Try it
+              </Button>
+            </div>
+            <div className="md:w-1/2 mt-8 md:mt-0">
+              <img 
+                src={heroImage}
+                alt="Illustration" 
+                className="w-full h-auto rounded-lg shadow-lg"
+              />
+            </div>
+          </div>
+        </section>
 
         <div className="grid gap-8 max-w-6xl mx-auto">
           <Card>
@@ -190,7 +234,7 @@ export default function ScribeAI() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
+              <div className="flex items-start justify-between gap-4">
                 <div className="grid w-full max-w-sm items-center gap-1.5">
                   <Label htmlFor="image-upload">Images of handwritten text</Label>
                   <Input 
@@ -206,14 +250,24 @@ export default function ScribeAI() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
+                    className="flex flex-col gap-2"
                   >
                     <Button 
                       onClick={handleGenerateNotes} 
                       disabled={isProcessing}
                       className="w-full sm:w-auto"
+                      variant="primary"
                     >
                       <Sparkles className="mr-2 h-4 w-4" />
                       {isProcessing ? 'Processing...' : 'Generate Notes'}
+                    </Button>
+                    <Button 
+                      onClick={handleExportPDF} 
+                      disabled={images.some(img => !img.notes)}
+                      className="w-full sm:w-auto"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Export as PDF
                     </Button>
                   </motion.div>
                 )}
@@ -231,27 +285,32 @@ export default function ScribeAI() {
               </CardHeader>
               <CardContent>
                 <motion.div 
-                  className="space-y-6"
+                  className="space-y-8"
                   layout
                 >
                   {images.map((image) => (
                     <motion.div 
                       key={image.id} 
-                      className="space-y-2"
+                      className="space-y-4"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                     >
-                      <div className="flex flex-col md:flex-row gap-4">
-                        <ImagePreview image={image} onDelete={() => handleDeleteImage(image.id)} />
-                        <div className="flex-grow">
-                          <Label htmlFor={`notes-${image.id}`} className="text-sm font-medium mb-2 block">
-                            Transcribed Text
-                          </Label>
+                      <div className="flex flex-col md:flex-row gap-6">
+                        <div>
+                          <ImagePreview image={image} onDelete={() => handleDeleteImage(image.id)} />
+                          {image.notes && <Button 
+                            onClick={() => navigator.clipboard.writeText(image.notes)}
+                            className="mt-2"
+                          >
+                            Copy Text
+                            </Button>}
+                        </div>
+                        <div className="flex-grow md:order-last">
                           <Textarea 
                             id={`notes-${image.id}`}
                             value={image.notes}
                             readOnly
-                            className="min-h-[150px] font-mono text-sm"
+                            className="min-h-[300px] font-mono text-sm p-4"
                             placeholder="Notes will appear here after processing..."
                           />
                         </div>
@@ -265,9 +324,18 @@ export default function ScribeAI() {
         </div>
       </main>
 
-      <footer className="border-t mt-20">
-        <div className="container mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
-          Made with 💜 by ScribeAI
+      <footer className="bg-gray-900 text-white mt-12">
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+          <p className="text-center text-sm">
+            &copy; 2024 AI Code Converter. All rights reserved.
+          </p>
+          <button
+            onClick={() => window.open('https://buymeacoffee.com/pallavjha', '_blank')}
+            className="inline-flex items-center px-4 py-2 text-sm bg-transparent hover:bg-white hover:bg-opacity-10 rounded-md transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          >
+            <CoffeeIcon style={{ marginRight: '12px' }} />
+            Buy Me a Coffee
+          </button>
         </div>
       </footer>
     </div>
