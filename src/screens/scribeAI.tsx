@@ -22,6 +22,7 @@ import OpenAI from 'openai'
 import { jsPDF } from 'jspdf'
 import heroImage from '../assets/images/hero.jpeg'
 import animationData from '../assets/animations/header.json'; // Make sure to replace with the correct path
+import heic2any from 'heic2any';
 
 interface ImageData {
   id: string;
@@ -80,21 +81,51 @@ export default function ScribeAI() {
   }, [isDark])
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
+    const files = event.target.files;
     if (files) {
       Array.from(files).forEach(file => {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          setImages(prev => [...prev, { 
-            id: Date.now().toString(), 
-            src: e.target?.result as string, 
-            notes: '' 
-          }])
+        switch (file.type) {
+          case 'image/heic':
+            // Convert HEIC to JPEG
+            heic2any({ blob: file, toType: 'image/jpeg' })
+              .then((convertedBlob) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  setImages(prev => [...prev, { 
+                    id: Date.now().toString(), 
+                    src: e.target?.result as string, 
+                    notes: '' 
+                  }]);
+                };
+                reader.readAsDataURL(convertedBlob as Blob);
+              })
+              .catch(error => {
+                console.error('HEIC conversion error:', error);
+              });
+            break;
+          case 'image/jpeg':
+          case 'image/png':
+          case 'image/gif':
+          case 'image/bmp':
+          case 'image/webp':
+            // Directly read these common image types
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              setImages(prev => [...prev, { 
+                id: Date.now().toString(), 
+                src: e.target?.result as string, 
+                notes: '' 
+              }]);
+            };
+            reader.readAsDataURL(file);
+            break;
+          default:
+            alert(`Unsupported file type: ${file.type}`);
+            break;
         }
-        reader.readAsDataURL(file)
-      })
+      });
     }
-    setShowIntro(false)
+    setShowIntro(false);
   }
 
   const handleDeleteImage = (id: string) => {
