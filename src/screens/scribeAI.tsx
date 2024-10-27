@@ -15,7 +15,8 @@ import {
   Sparkles,
   BookOpen,
   CoffeeIcon,
-  Download
+  Download,
+  HelpCircle
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import OpenAI from 'openai'
@@ -69,6 +70,7 @@ export default function ScribeAI() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isDark, setIsDark] = useState(false)
   const [, setShowIntro] = useState(true)
+  const [showGuidelines, setShowGuidelines] = useState(false);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -271,7 +273,12 @@ export default function ScribeAI() {
               <CardTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5" />
                 Upload Images
+                <HelpCircle
+                onClick={() => setShowGuidelines(true)} 
+                className="ml-auto"
+              />
               </CardTitle>
+             
             </CardHeader>
             <CardContent>
               <div className="flex items-start justify-between gap-4">
@@ -361,6 +368,7 @@ export default function ScribeAI() {
               </CardContent>
             </Card>
           )}
+          <p className="text-sm text-gray-500 text-center">AI can make mistakes, so please review the notes carefully.</p>
         </div>
       </main>
 
@@ -378,6 +386,28 @@ export default function ScribeAI() {
           </button>
         </div>
       </footer>
+
+      {showGuidelines && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">Guidelines</h2>
+            <p className="mb-4">
+              Here are some guidelines for uploading images:
+              <ul className="list-disc pl-5">
+                <li>Ensure the image is clear and well-lit.</li>
+                <li>Supported formats: JPEG, PNG, GIF, BMP, WEBP, HEIC.</li>
+                <li>Maximum file size: 5MB.</li>
+              </ul>
+            </p>
+            <Button 
+              onClick={() => setShowGuidelines(false)} 
+              className="mt-4"
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
