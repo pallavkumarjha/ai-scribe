@@ -283,15 +283,16 @@ export default function ScribeAI() {
             <CardContent>
               <div className="flex items-start justify-between gap-4">
                 <div className="grid w-full max-w-sm items-center gap-1.5">
-                  <Label htmlFor="image-upload">Images of handwritten text</Label>
-                  <Input 
-                    id="image-upload" 
-                    type="file" 
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className={`cursor-pointer ${!isDark ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}
-                    multiple
-                  />
+                  <div className="flex items-center justify-center w-full">
+                    <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-10 h-10 mb-3 text-gray-400" />
+                        <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                        <p className="text-xs text-gray-500">PNG or JPEG</p>
+                      </div>
+                      <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={handleImageUpload} multiple/>
+                    </label>
+                  </div>
                 </div>
                 {images.length > 0 && (
                   <motion.div
@@ -388,15 +389,15 @@ export default function ScribeAI() {
       </footer>
 
       {showGuidelines && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center text-black">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">Guidelines</h2>
             <p className="mb-4">
               Here are some guidelines for uploading images:
               <ul className="list-disc pl-5">
                 <li>Ensure the image is clear and well-lit.</li>
-                <li>Supported formats: JPEG, PNG, GIF, BMP, WEBP, HEIC.</li>
-                <li>Maximum file size: 5MB.</li>
+                <li>Supported formats: JPEG, PNG </li>
+                <li>You can upload multiple images at once.</li>
               </ul>
             </p>
             <Button 
